@@ -36,6 +36,18 @@ def getLeafNodeToInsert(currNode,parent,key): #returns leafNode,parent
                     return getLeafNodeToInsert(currNode.pointers[i],currNode,key)
             return getLeafNodeToInsert(currNode.pointers[currNode.getLen()],currNode,key)
 
+def getParent(root:Node,parent:Node):
+    if(root == parent):
+        return None
+    for p in root.pointers:
+        if p==parent:
+            return root
+    else:
+        for i in range(root.getLen()):
+            if parent.keys[0] < root.keys[i]:
+                return getParent(root.pointers[i],parent)
+        return getParent(root.pointers[root.getLen()],parent)
+
 def printBP(root:Node): # print level order
     if root:
         pass
@@ -56,23 +68,92 @@ def getNewLeafNodes(currList:list): #returns left and right Nodes
     leftNode.isLeaf = True
     rightNode.isLeaf = True
     leftNode.keys[0] = currList[0]
-    leftNode.keys[1] = currList[1]
-    rightNode.keys[0] = currList[2]
-    rightNode.keys[1] = currList[3]
+    rightNode.keys[0] = currList[1]
+    rightNode.keys[1] = currList[2]
     return leftNode,rightNode
 
-def insertIntermediate(parent:Node,leftNode:Node,rightNode:Node):
+def getKeysPointers(parent:Node,leftNode:Node,rightNode:Node,keyToInsert):
+    #here parent should already be full otherwise throw error
+    keyAns = []
+    pointerAns = []
+    if keyToInsert < parent.keys[0]:
+        keyAns.append(keyToInsert)
+        keyAns.append(parent.keys[0])
+        keyAns.append(parent.keys[1])
+        pointerAns.append(leftNode)
+        pointerAns.append(rightNode)
+        pointerAns.append(parent.pointers[1])
+        pointerAns.append(parent.pointers[2])
+        return keyAns,pointerAns
+    elif (keyToInsert>parent.keys[0] and keyToInsert<parent.keys[1]):
+        keyAns.append(parent.keys[0])
+        keyAns.append(keyToInsert)
+        keyAns.append(parent.keys[1])
+        pointerAns.append(parent.pointers[0])
+        pointerAns.append(leftNode)
+        pointerAns.append(rightNode)
+        pointerAns.append(parent.pointers[2])
+        return keyAns,pointerAns
+    else:
+        keyAns.append(parent.keys[0])
+        keyAns.append(parent.keys[1])
+        keyAns.append(keyToInsert)
+        pointerAns.append(parent.pointers[0])
+        pointerAns.append(parent.pointers[1])
+        pointerAns.append(leftNode)
+        pointerAns.append(rightNode)
+        return keyAns,pointerAns
+
+def insertIntermediate(parent:Node,leftNode:Node,rightNode:Node,root:Node,keyToInsert):
     #keep mutating the parent no assignment
     if parent.hasPlace():
         # need to implement rightNode.keys[0] in parent
-        for i in range(len(parent.keys)):
-            if parent.keys[i] is None:
-                parent.keys[i] = rightNode.keys[0]
-                parent.pointers[i] = leftNode
-                parent.pointers[i+1] = rightNode
-                break
+        if(parent.keys[0] < keyToInsert):
+            parent.keys[1] = keyToInsert
+            parent.pointers[1] = leftNode
+            parent.pointers[2] = rightNode
+        else:
+            parent.keys[1] = parent.keys[0]
+            parent.pointers[2] = parent.pointers[1]
+            parent.pointers[1] = parent.pointers[0]
+            parent.keys[0] = keyToInsert
+            parent.pointers[0] = leftNode
+            parent.pointers[1] = rightNode
     else:
         print("Implement parent does not has place case")
+        grandParent = getParent(root,parent)
+        if grandParent is None:
+            print("parent is None")
+            #need to set keys and pointers first
+            newKeys,newPointers = getKeysPointers(parent,leftNode,rightNode,keyToInsert)
+            print("new keys ", newKeys)
+            leftIntermediateNode = Node()
+            leftIntermediateNode.keys[0] = newKeys[0]
+            leftIntermediateNode.pointers[0] = newPointers[0]
+            leftIntermediateNode.pointers[1] = newPointers[1]
+            rightIntermediateNode = Node()
+            rightIntermediateNode.keys[0] = newKeys[2]
+            rightIntermediateNode.pointers[0] = newPointers[2]
+            rightIntermediateNode.pointers[1] = newPointers[3]
+            root.reset()
+            root.keys[0] = newKeys[1]
+            root.pointers[0] = leftIntermediateNode
+            root.pointers[1] = rightIntermediateNode
+        else:
+            print("parent is ",grandParent.keys)
+            newKeys,newPointers = getKeysPointers(parent,leftNode,rightNode,keyToInsert)
+            print("new keys ", newKeys)
+            leftIntermediateNode = Node()
+            leftIntermediateNode.keys[0] = newKeys[0]
+            leftIntermediateNode.pointers[0] = newPointers[0]
+            leftIntermediateNode.pointers[1] = newPointers[1]
+            rightIntermediateNode = Node()
+            rightIntermediateNode.keys[0] = newKeys[2]
+            rightIntermediateNode.pointers[0] = newPointers[2]
+            rightIntermediateNode.pointers[1] = newPointers[3]
+            insertIntermediate(grandParent,leftIntermediateNode,rightIntermediateNode,root,newKeys[1])
+
+
 
 def insert(root,key):
     print("Inserting : ",key) 
@@ -104,7 +185,7 @@ def insert(root,key):
             #return newParent
         else:
             print("Parent is not none condition")
-            insertIntermediate(parent,leftNode,rightNode)
+            insertIntermediate(parent,leftNode,rightNode,root,rightNode.keys[0])
             printBP(root)
             print("-"*10)
 
@@ -114,8 +195,8 @@ def main():
     insert(root,20)
     insert(root,10)
     insert(root,5)
-    insert(root,50)
-    insert(root,30)
+    insert(root,1)
+    insert(root,2)
     insert(root,15)
     insert(root,60)
     while True:
