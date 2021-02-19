@@ -62,6 +62,7 @@ def printBP(root:Node): # print level order
                 if currNode.pointers[i]:
                     queue.append(currNode.pointers[i])
             print()
+    printLeafs(root)
 def getNewLeafNodes(currList:list): #returns left and right Nodes
     leftNode = Node()
     rightNode = Node()
@@ -153,7 +154,47 @@ def insertIntermediate(parent:Node,leftNode:Node,rightNode:Node,root:Node,keyToI
             rightIntermediateNode.pointers[1] = newPointers[3]
             insertIntermediate(grandParent,leftIntermediateNode,rightIntermediateNode,root,newKeys[1])
 
+def getLeftCousin(currNode:Node,root:Node):
+    parent = getParent(root,currNode)
+    if parent is None:
+        return None
+    elif(parent.pointers[0] == currNode):
+        #need to get sibling
+        uncle = getLeftCousin(parent,root)
+        if uncle is None:
+            return None
+        else:
+            return uncle.pointers[uncle.getLen()]
+    else:
+        for i in range(1,parent.getLen()+1):
+            if(parent.pointers[i] == currNode):
+                return parent.pointers[i-1]
 
+def getRightCousin(currNode:Node,root:Node):
+    parent = getParent(root,currNode)
+    if parent is None:
+        return None
+    elif(parent.pointers[parent.getLen()] == currNode):
+        #need to get sibling
+        uncle = getRightCousin(parent,root)
+        if uncle is None:
+            return None
+        else:
+            return uncle.pointers[0]
+    else:
+        for i in range(0,parent.getLen()):
+            if(parent.pointers[i] == currNode):
+                return parent.pointers[i+1]
+
+def printLeafs(root:Node):
+    print("printing leaves")
+    temp = root
+    while(temp.isLeaf == False):
+        temp = temp.pointers[0]
+    while temp is not None:
+        print(temp.keys)
+        temp = temp.pointers[2]
+    #print(temp)
 
 def insert(root,key):
     print("Inserting : ",key) 
@@ -164,8 +205,6 @@ def insert(root,key):
                 leafNode.keys[i] = key
                 break
         leafNode.keys = sorted(leafNode.keys,key=lambda x: (x is None,x))
-        printBP(root)
-        print("-"*10)
     else:
         currList = leafNode.keys.copy()
         currList.append(key)
@@ -179,26 +218,47 @@ def insert(root,key):
             root.pointers[0] = leftNode
             root.pointers[1] = rightNode
             root.isLeaf = False
-            printBP(root)
-            print("-"*10)
             #root = newParent
             #return newParent
         else:
             print("Parent is not none condition")
             insertIntermediate(parent,leftNode,rightNode,root,rightNode.keys[0])
-            printBP(root)
-            print("-"*10)
+        leftCousin = getLeftCousin(leftNode,root)
+        rightCousin = getRightCousin(rightNode,root)
+        if leftCousin is not None:
+            leftCousin.pointers[2] = leftNode
+        if rightCousin is not None:
+            rightNode.pointers[2] = rightCousin
+        leftNode.pointers[2]=rightNode
 
 def main():
     root = Node()
     root.isLeaf = True
     insert(root,20)
+    printBP(root)
+    print("-"*20)
     insert(root,10)
+    printBP(root)
+    print("-"*20)
     insert(root,5)
+    printBP(root)
+    print("-"*20)
     insert(root,1)
+    printBP(root)
+    print("-"*20)
     insert(root,2)
+    printBP(root)
+    print("-"*20)
     insert(root,15)
+    printBP(root)
+    print("-"*20)
     insert(root,60)
+    printBP(root)
+    print("-"*20)
+    insert(root,80)
+    printBP(root)
+    print("-"*20)
+    
     while True:
         val = input() # INSERT X
         val = val.split(' ')
@@ -207,6 +267,9 @@ def main():
             key = int(val[1])
             insert(root,key)
             #printBP(root,0)
+        if(command.upper() == 'PRINT'):
+            printBP(root)
+            print("-"*20)
 
 if __name__ == "__main__":
     main()
