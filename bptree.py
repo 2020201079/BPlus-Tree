@@ -1,6 +1,5 @@
 import copy
-from queue import Queue
-
+import queue
 order = 2 # order of bptree hardcoding it # number of children
 class Node:
     def __init__(self): # always creates a non leaf node
@@ -8,7 +7,6 @@ class Node:
         self.counts = [0]*order
         self.pointers = [None]*(order+1)
         self.isLeaf = False
-        self.count = 1
     def getKeys(self):
         return self.keys
     def getPointers(self):
@@ -50,6 +48,11 @@ def getParent(root:Node,parent:Node):
                 return getParent(root.pointers[i],parent)
         return getParent(root.pointers[root.getLen()],parent)
 
+def printNode(currNode:Node):
+    for i in range(currNode.getLen()):
+        for j in range(currNode.counts[i]):
+            print(currNode.keys[i],end=" ")
+    
 def printBP(root:Node): # print level order
     if root:
         pass
@@ -59,20 +62,25 @@ def printBP(root:Node): # print level order
     while queue:
         currNode = queue.pop(0)
         if currNode:
-            print(currNode.keys)
+            #print(currNode.keys)
+            printNode(currNode)
             for i in range(len(currNode.pointers)):
                 if currNode.pointers[i]:
                     queue.append(currNode.pointers[i])
             print()
     printLeafs(root)
-def getNewLeafNodes(currList:list): #returns left and right Nodes
+
+def getNewLeafNodes(currList:list,currCounts:list): #returns left and right Nodes
     leftNode = Node()
     rightNode = Node()
     leftNode.isLeaf = True
     rightNode.isLeaf = True
     leftNode.keys[0] = currList[0]
+    leftNode.counts[0] = currCounts[0]
     rightNode.keys[0] = currList[1]
+    rightNode.counts[0] = currCounts[1]
     rightNode.keys[1] = currList[2]
+    rightNode.counts[1] = currCounts[2]
     return leftNode,rightNode
 
 def getKeysPointers(parent:Node,leftNode:Node,rightNode:Node,keyToInsert):
@@ -194,12 +202,12 @@ def printLeafs(root:Node):
     while(temp.isLeaf == False):
         temp = temp.pointers[0]
     while temp is not None:
-        print(temp.keys)
+        #print(temp.keys)
+        printNode(temp)
         temp = temp.pointers[2]
-    #print(temp)
+    print()
 
 def insert(root,key):
-    print("Inserting : ",key) 
     leafNode,parent = getLeafNodeToInsert(root,None,key)
     if(leafNode.hasPlace()):
         for i in range(len(leafNode.keys)):
@@ -207,12 +215,18 @@ def insert(root,key):
                 leafNode.keys[i] = key
                 leafNode.counts[i] += 1
                 break
-        leafNode.keys = sorted(leafNode.keys,key=lambda x: (x is None,x))
+        newKeys = [x for x,_ in sorted(zip(leafNode.keys,leafNode.counts),key=lambda x:(x[0] is None,x[0]))]
+        newCounts = [x for _,x in sorted(zip(leafNode.keys,leafNode.counts),key=lambda x:(x[0] is None,x[0]))]
+        leafNode.keys = newKeys
+        leafNode.counts = newCounts
     else:
         currList = leafNode.keys.copy()
+        currCounts = leafNode.counts.copy()
         currList.append(key)
-        currList = sorted(currList)
-        leftNode,rightNode = getNewLeafNodes(currList)
+        currCounts.append(1)
+        newKeys = [x for x,_ in sorted(zip(currList,currCounts))]
+        newCounts = [x for _,x in sorted(zip(currList,currCounts))]
+        leftNode,rightNode = getNewLeafNodes(newKeys,newCounts)
         if parent is None:
             print("entered parent is None Cond")
             root.reset()
@@ -258,7 +272,8 @@ def rangeQuery(root:Node,start,end):
     while startNode is not None:
         for i in range(startNode.getLen()):
             if startNode.keys[i]>=start and startNode.keys[i]<=end:
-                ans.append(startNode.keys[i])
+                for j in range(startNode.counts[i]):
+                    ans.append(startNode.keys[i])
             elif startNode.keys[i] > end:
                 return ans
         startNode = startNode.pointers[2]
@@ -313,13 +328,13 @@ def main():
         val = input() # INSERT X
         val = val.split(' ')
         command = val[0]
-        if(command.upper() == 'I'):
+        if(command.upper() == 'INSERT'):
             key = int(val[1])
             node = find(root,key)
             if(node):
                 for i in range(node.getLen()):
                     if(node.keys[i] == key):
-                        node.count[i] += 1
+                        node.counts[i] += 1
                         break
             else:
                 insert(root,key)
@@ -338,7 +353,10 @@ def main():
             keyToCount = int(val[1])
             node = find(root,keyToCount)
             if(node):
-                print("count is ", node.count)
+                for i in range(node.getLen()):
+                    if node.keys[i] == keyToCount:
+                        print("count is ", node.counts[i])
+                        break
             else:
                 print(0)
             print("-"*20)
