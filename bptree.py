@@ -48,11 +48,14 @@ def getParent(root:Node,parent:Node):
                 return getParent(root.pointers[i],parent)
         return getParent(root.pointers[root.getLen()],parent)
 
+'''
 def printNode(currNode:Node):
     for i in range(currNode.getLen()):
         for j in range(currNode.counts[i]):
             print(currNode.keys[i],end=" ")
-    
+'''
+
+'''
 def printBP(root:Node): # print level order
     if root:
         pass
@@ -69,7 +72,7 @@ def printBP(root:Node): # print level order
                     queue.append(currNode.pointers[i])
             print()
     printLeafs(root)
-
+'''
 def getNewLeafNodes(currList:list,currCounts:list): #returns left and right Nodes
     leftNode = Node()
     rightNode = Node()
@@ -131,13 +134,13 @@ def insertIntermediate(parent:Node,leftNode:Node,rightNode:Node,root:Node,keyToI
             parent.pointers[0] = leftNode
             parent.pointers[1] = rightNode
     else:
-        print("Implement parent does not has place case")
+        #print("Implement parent does not has place case")
         grandParent = getParent(root,parent)
         if grandParent is None:
-            print("parent is None")
+            #print("parent is None")
             #need to set keys and pointers first
             newKeys,newPointers = getKeysPointers(parent,leftNode,rightNode,keyToInsert)
-            print("new keys ", newKeys)
+            #print("new keys ", newKeys)
             leftIntermediateNode = Node()
             leftIntermediateNode.keys[0] = newKeys[0]
             leftIntermediateNode.pointers[0] = newPointers[0]
@@ -151,9 +154,9 @@ def insertIntermediate(parent:Node,leftNode:Node,rightNode:Node,root:Node,keyToI
             root.pointers[0] = leftIntermediateNode
             root.pointers[1] = rightIntermediateNode
         else:
-            print("parent is ",grandParent.keys)
+            #print("parent is ",grandParent.keys)
             newKeys,newPointers = getKeysPointers(parent,leftNode,rightNode,keyToInsert)
-            print("new keys ", newKeys)
+            #print("new keys ", newKeys)
             leftIntermediateNode = Node()
             leftIntermediateNode.keys[0] = newKeys[0]
             leftIntermediateNode.pointers[0] = newPointers[0]
@@ -196,6 +199,7 @@ def getRightCousin(currNode:Node,root:Node):
             if(parent.pointers[i] == currNode):
                 return parent.pointers[i+1]
 
+'''
 def printLeafs(root:Node):
     print("printing leaves")
     temp = root
@@ -206,7 +210,7 @@ def printLeafs(root:Node):
         printNode(temp)
         temp = temp.pointers[2]
     print()
-
+'''
 def insert(root,key):
     leafNode,parent = getLeafNodeToInsert(root,None,key)
     if(leafNode.hasPlace()):
@@ -228,14 +232,14 @@ def insert(root,key):
         newCounts = [x for _,x in sorted(zip(currList,currCounts))]
         leftNode,rightNode = getNewLeafNodes(newKeys,newCounts)
         if parent is None:
-            print("entered parent is None Cond")
+            #print("entered parent is None Cond")
             root.reset()
             root.keys[0] = rightNode.keys[0]
             root.pointers[0] = leftNode
             root.pointers[1] = rightNode
             root.isLeaf = False
         else:
-            print("Parent is not none condition")
+            #print("Parent is not none condition")
             insertIntermediate(parent,leftNode,rightNode,root,rightNode.keys[0])
         leftCousin = getLeftCousin(leftNode,root)
         rightCousin = getRightCousin(rightNode,root)
@@ -283,49 +287,10 @@ def rangeQuery(root:Node,start,end):
 def main():
     root = Node()
     root.isLeaf = True
-
-    insert(root,20)
-    printBP(root)
-    print("-"*20)
-    
-    insert(root,10)
-    printBP(root)
-    print("-"*20)
-    
-    insert(root,5)
-    printBP(root)
-    print("-"*20)
-    
-    insert(root,1)
-    printBP(root)
-    print("-"*20)
-
-    insert(root,2)
-    printBP(root)
-    print("-"*20)
-
-    insert(root,15)
-    printBP(root)
-    print("-"*20)
-
-    insert(root,60)
-    printBP(root)
-    print("-"*20)
-
-    insert(root,80)
-    printBP(root)
-    print("-"*20)
-
-    insert(root,25)
-    printBP(root)
-    print("-"*20)
-
-    insert(root,30)
-    printBP(root)
-    print("-"*20)
-    
-    while True:
-        val = input() # INSERT X
+    file1 = open('input1.txt','r')
+    for line in file1:
+        #val = input() # INSERT X
+        val = line
         val = val.split(' ')
         command = val[0]
         if(command.upper() == 'INSERT'):
@@ -341,30 +306,28 @@ def main():
             #printBP(root,0)
         if(command.upper() == 'PRINT'):
             printBP(root)
-            print("-"*20)
         if(command.upper() == 'FIND'):
             keyToFind = int(val[1])
             if(find(root,keyToFind)):
                 print("YES")
             else:
                 print("NO")
-            print("-"*20)
         if(command.upper() == 'COUNT'):
             keyToCount = int(val[1])
             node = find(root,keyToCount)
             if(node):
                 for i in range(node.getLen()):
                     if node.keys[i] == keyToCount:
-                        print("count is ", node.counts[i])
+                        print(node.counts[i])
                         break
             else:
                 print(0)
-            print("-"*20)
         if(command.upper() == 'RANGE'):
             start = int(val[1])
             end = int(val[2])
             ans = rangeQuery(root,start,end)
-            print(ans)
+            print(len(ans))
+    file1.close()
 
 if __name__ == "__main__":
     main()
