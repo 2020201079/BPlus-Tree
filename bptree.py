@@ -5,8 +5,10 @@ order = 2 # order of bptree hardcoding it # number of children
 class Node:
     def __init__(self): # always creates a non leaf node
         self.keys = [None]*order
+        self.counts = [0]*order
         self.pointers = [None]*(order+1)
         self.isLeaf = False
+        self.count = 1
     def getKeys(self):
         return self.keys
     def getPointers(self):
@@ -203,6 +205,7 @@ def insert(root,key):
         for i in range(len(leafNode.keys)):
             if leafNode.keys[i] is None:
                 leafNode.keys[i] = key
+                leafNode.counts[i] += 1
                 break
         leafNode.keys = sorted(leafNode.keys,key=lambda x: (x is None,x))
     else:
@@ -212,14 +215,11 @@ def insert(root,key):
         leftNode,rightNode = getNewLeafNodes(currList)
         if parent is None:
             print("entered parent is None Cond")
-            #newParent = Node()
             root.reset()
             root.keys[0] = rightNode.keys[0]
             root.pointers[0] = leftNode
             root.pointers[1] = rightNode
             root.isLeaf = False
-            #root = newParent
-            #return newParent
         else:
             print("Parent is not none condition")
             insertIntermediate(parent,leftNode,rightNode,root,rightNode.keys[0])
@@ -231,31 +231,81 @@ def insert(root,key):
             rightNode.pointers[2] = rightCousin
         leftNode.pointers[2]=rightNode
 
+def find(root:Node,key):
+    if root is None:
+        return False
+    for i in range(root.getLen()):
+        if root.keys[i] == key:
+            if root.isLeaf:
+                return root
+            else:
+                return find(root.pointers[i+1],key)
+        elif key<root.keys[i]:
+            return find(root.pointers[i],key)
+    return find(root.pointers[root.getLen()],key)
+
+def getStartingNode(root:Node,start):
+    if root.isLeaf:
+        return root
+    for i in range(root.getLen()):
+        if start < root.keys[i]:
+            return getStartingNode(root.pointers[i],start)
+    return getStartingNode(root.pointers[root.getLen()],start)
+    
+def rangeQuery(root:Node,start,end):
+    ans = []
+    startNode = getStartingNode(root,start)
+    while startNode is not None:
+        for i in range(startNode.getLen()):
+            if startNode.keys[i]>=start and startNode.keys[i]<=end:
+                ans.append(startNode.keys[i])
+            elif startNode.keys[i] > end:
+                return ans
+        startNode = startNode.pointers[2]
+    return ans
+
+
 def main():
     root = Node()
     root.isLeaf = True
+
     insert(root,20)
     printBP(root)
     print("-"*20)
+    
     insert(root,10)
     printBP(root)
     print("-"*20)
+    
     insert(root,5)
     printBP(root)
     print("-"*20)
+    
     insert(root,1)
     printBP(root)
     print("-"*20)
+
     insert(root,2)
     printBP(root)
     print("-"*20)
+
     insert(root,15)
     printBP(root)
     print("-"*20)
+
     insert(root,60)
     printBP(root)
     print("-"*20)
+
     insert(root,80)
+    printBP(root)
+    print("-"*20)
+
+    insert(root,25)
+    printBP(root)
+    print("-"*20)
+
+    insert(root,30)
     printBP(root)
     print("-"*20)
     
@@ -265,11 +315,38 @@ def main():
         command = val[0]
         if(command.upper() == 'I'):
             key = int(val[1])
-            insert(root,key)
+            node = find(root,key)
+            if(node):
+                for i in range(node.getLen()):
+                    if(node.keys[i] == key):
+                        node.count[i] += 1
+                        break
+            else:
+                insert(root,key)
             #printBP(root,0)
         if(command.upper() == 'PRINT'):
             printBP(root)
             print("-"*20)
+        if(command.upper() == 'FIND'):
+            keyToFind = int(val[1])
+            if(find(root,keyToFind)):
+                print("YES")
+            else:
+                print("NO")
+            print("-"*20)
+        if(command.upper() == 'COUNT'):
+            keyToCount = int(val[1])
+            node = find(root,keyToCount)
+            if(node):
+                print("count is ", node.count)
+            else:
+                print(0)
+            print("-"*20)
+        if(command.upper() == 'RANGE'):
+            start = int(val[1])
+            end = int(val[2])
+            ans = rangeQuery(root,start,end)
+            print(ans)
 
 if __name__ == "__main__":
     main()
